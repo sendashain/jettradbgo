@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  multimodel-db-node1:
+    build: .
+    ports:
+      - "8081:8080"
+    environment:
+      - DB_PORT=8080
+      - CLUSTER_ENABLED=true
+      - CLUSTER_PORT=9090
+      - REPLICATION_FACTOR=2
+    volumes:
+      - multimodel-data1:/data
+
+  multimodel-db-node2:
+    build: .
+    ports:
+      - "8082:8080"
+    environment:
+      - DB_PORT=8080
+      - CLUSTER_ENABLED=true
+      - CLUSTER_PORT=9090
+      - REPLICATION_FACTOR=2
+    volumes:
+      - multimodel-data2:/data
+
+  multimodel-db-node3:
+    build: .
+    ports:
+      - "8083:8080"
+    environment:
+      - DB_PORT=8080
+      - CLUSTER_ENABLED=true
+      - CLUSTER_PORT=9090
+      - REPLICATION_FACTOR=2
+    volumes:
+      - multimodel-data3:/data
+
+volumes:
+  multimodel-data1:
+  multimodel-data2:
+  multimodel-data3:
