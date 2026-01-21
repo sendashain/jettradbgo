@@ -1,0 +1,17 @@
+{
+  "name": "multimodel-db-admin-frontend",
+  "version": "1.0.0",
+  "description": "Web administration interface for the multi-model database engine",
+  "main": "index.js",
+  "scripts": {
+    "dev": "npx serve ./src",
+    "build": "mkdir -p dist && cp -r src/* dist/",
+    "start": "npx serve ./dist"
+  },
+  "keywords": ["database", "admin", "web", "multi-model"],
+  "author": "Multi-Model DB Engine",
+  "license": "MIT",
+  "devDependencies": {
+    "serve": "^14.2.1"
+  }
+}

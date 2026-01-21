@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  database-engine:
+    build:
+      context: ../
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+    networks:
+      - dbnet
+    volumes:
+      - db_data:/app/data
+    restart: unless-stopped
+
+  web-admin:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - DB_URL=http://database-engine:8080
+      - PORT=3000
+    depends_on:
+      - database-engine
+    networks:
+      - dbnet
+    restart: unless-stopped
+
+networks:
+  dbnet:
+    driver: bridge
+
+volumes:
+  db_data:

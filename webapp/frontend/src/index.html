@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Model Database Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3f37c9;
+            --success-color: #4cc9f0;
+            --dark-color: #2b2d42;
+            --light-color: #f8f9fa;
+        }
+        
+        body {
+            background-color: #f5f7fb;
+            color: var(--dark-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .sidebar {
+            background: linear-gradient(180deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            min-height: 100vh;
+            padding-top: 2rem;
+        }
+        
+        .sidebar a {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            padding: 0.75rem 1.5rem;
+            display: block;
+            border-radius: 0;
+            transition: all 0.3s;
+        }
+        
+        .sidebar a:hover, .sidebar a.active {
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .main-content {
+            padding: 2rem;
+        }
+        
+        .card {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            border: none;
+            margin-bottom: 1.5rem;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .card-header {
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            font-weight: 600;
+            padding: 1rem 1.25rem;
+        }
+        
+        .stat-card {
+            text-align: center;
+            padding: 1.5rem;
+        }
+        
+        .stat-card i {
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+        
+        .stat-card h3 {
+            font-size: 2rem;
+            margin: 0.5rem 0 0;
+            color: var(--dark-color);
+        }
+        
+        .stat-card p {
+            color: #6c757d;
+            margin: 0;
+        }
+        
+        .db-type-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .document-badge { background-color: #e0f7fa; color: #006064; }
+        .keyvalue-badge { background-color: #e8f5e9; color: #1b5e20; }
+        .column-badge { background-color: #fff3e0; color: #e65100; }
+        .graph-badge { background-color: #fce4ec; color: #880e4f; }
+        
+        .nav-tabs .nav-link.active {
+            background-color: var(--primary-color);
+            color: white;
+            border: 1px solid var(--primary-color);
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+        
+        .table th {
+            background-color: rgba(67, 97, 238, 0.1);
+        }
+        
+        .json-viewer {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            font-family: monospace;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .model-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+        }
+        
+        .document-icon { background-color: rgba(76, 201, 240, 0.2); color: #4cc9f0; }
+        .keyvalue-icon { background-color: rgba(76, 175, 80, 0.2); color: #4caf50; }
+        .column-icon { background-color: rgba(255, 152, 0, 0.2); color: #ff9800; }
+        .graph-icon { background-color: rgba(156, 39, 176, 0.2); color: #9c27b0; }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-active { background-color: #4caf50; }
+        .status-inactive { background-color: #f44336; }
+        .status-warning { background-color: #ff9800; }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 sidebar d-md-block px-0">
+                <div class="text-center mb-4 p-3">
+                    <h4><i class="fas fa-database me-2"></i>DB Admin</h4>
+                    <small class="text-light">Multi-Model Database Engine</small>
+                </div>
+                
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#" id="dashboard-link">
+                            <i class="fas fa-tachometer-alt me-2"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" id="documents-link">
+                            <i class="fas fa-file-alt me-2"></i> Documents
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" id="keyvalue-link">
+                            <i class="fas fa-key me-2"></i> Key-Value
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" id="columns-link">
+                            <i class="fas fa-table me-2"></i> Columns
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" id="graph-link">
+                            <i class="fas fa-project-diagram me-2"></i> Graph
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" id="cluster-link">
+                            <i class="fas fa-network-wired me-2"></i> Cluster
+                        </a>
+                    </li>
+                    <li class="nav-item mt-4">
+                        <a class="nav-link" href="#" id="settings-link">
+                            <i class="fas fa-cog me-2"></i> Settings
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            
+            <!-- Main Content -->
+            <div class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
+                <!-- Header -->
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2"><span id="page-title">Dashboard</span></h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="refresh-btn">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Dashboard View -->
+                <div id="dashboard-view">
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="card stat-card">
+                                <i class="fas fa-database"></i>
+                                <h3 id="total-dbs">4</h3>
+                                <p>Total Databases</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card stat-card">
+                                <i class="fas fa-server"></i>
+                                <h3 id="total-nodes">3</h3>
+                                <p>Cluster Nodes</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card stat-card">
+                                <i class="fas fa-tasks"></i>
+                                <h3 id="total-collections">12</h3>
+                                <p>Collections</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card stat-card">
+                                <i class="fas fa-bolt"></i>
+                                <h3 id="status">Active</h3>
+                                <p>System Status</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <i class="fas fa-layer-group me-2"></i>Database Models
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <div class="d-flex align-items-center">
+                                                <div class="model-icon document-icon">
+                                                    <i class="fas fa-file-alt"></i>
+                                                </div>
+                                                <div>
+                                                    <h5>Document Store</h5>
+                                                    <span class="db-type-badge document-badge">NoSQL</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <div class="d-flex align-items-center">
+                                                <div class="model-icon keyvalue-icon">
+                                                    <i class="fas fa-key"></i>
+                                                </div>
+                                                <div>
+                                                    <h5>Key-Value Store</h5>
+                                                    <span class="db-type-badge keyvalue-badge">Cache</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <div class="d-flex align-items-center">
+                                                <div class="model-icon column-icon">
+                                                    <i class="fas fa-table"></i>
+                                                </div>
+                                                <div>
+                                                    <h5>Column Store</h5>
+                                                    <span class="db-type-badge column-badge">Analytics</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <div class="d-flex align-items-center">
+                                                <div class="model-icon graph-icon">
+                                                    <i class="fas fa-project-diagram"></i>
+                                                </div>
+                                                <div>
+                                                    <h5>Graph Store</h5>
+                                                    <span class="db-type-badge graph-badge">Relationships</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <i class="fas fa-heartbeat me-2"></i>System Status
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <div class="d-flex justify-content-between">
+                                            <span>Database Engine</span>
+                                            <span><span class="status-indicator status-active"></span> Active</span>
+                                        </div>
+                                        <div class="progress mt-2" style="height: 8px;">
+                                            <div class="progress-bar bg-success" role="progressbar" style="width: 100%"></div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <div class="d-flex justify-content-between">
+                                            <span>Cluster Status</span>
+                                            <span><span class="status-indicator status-active"></span> Healthy</span>
+                                        </div>
+                                        <div class="progress mt-2" style="height: 8px;">
+                                            <div class="progress-bar bg-success" role="progressbar" style="width: 95%"></div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <div class="d-flex justify-content-between">
+                                            <span>Replication</span>
+                                            <span><span class="status-indicator status-active"></span> Synced</span>
+                                        </div>
+                                        <div class="progress mt-2" style="height: 8px;">
+                                            <div class="progress-bar bg-info" role="progressbar" style="width: 80%"></div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <div class="d-flex justify-content-between">
+                                            <span>Storage</span>
+                                            <span><span class="status-indicator status-warning"></span> 75%</span>
+                                        </div>
+                                        <div class="progress mt-2" style="height: 8px;">
+                                            <div class="progress-bar bg-warning" role="progressbar" style="width: 75%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Documents View -->
+                <div id="documents-view" style="display: none;">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span><i class="fas fa-file-alt me-2"></i>Document Store Management</span>
+                            <button class="btn btn-sm btn-primary" id="add-document-btn">
+                                <i class="fas fa-plus me-1"></i> Add Document
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <label for="collections-select" class="form-label">Collection</label>
+                                    <select class="form-select" id="collections-select">
+                                        <option value="">Select a collection</option>
+                                        <option value="users">Users</option>
+                                        <option value="products">Products</option>
+                                        <option value="orders">Orders</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-8">
+                                    <label for="search-documents" class="form-label">Search</label>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="search-documents" placeholder="Search documents...">
+                                        <button class="btn btn-outline-secondary" type="button">
+                                            <i class="fas fa-search"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Data</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="documents-table-body">
+                                        <tr>
+                                            <td>doc1</td>
+                                            <td>{"name": "John Doe", "email": "john@example.com", "age": 30}</td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-primary me-1"><i class="fas fa-edit"></i></button>
+                                                <button class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>doc2</td>
+                                            <td>{"name": "Jane Smith", "email": "jane@example.com", "age": 25}</td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-primary me-1"><i class="fas fa-edit"></i></button>
+                                                <button class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Key-Value View -->
+                <div id="keyvalue-view" style="display: none;">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span><i class="fas fa-key me-2"></i>Key-Value Store Management</span>
+                            <button class="btn btn-sm btn-primary" id="add-kv-btn">
+                                <i class="fas fa-plus me-1"></i> Add Key-Value
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="search-kv" class="form-label">Search Keys</label>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="search-kv" placeholder="Search keys...">
+                                        <button class="btn btn-outline-secondary" type="button">
+                                            <i class="fas fa-search"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Key</th>
+                                            <th>Value</th>
+                                            <th>Type</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="kv-table-body">
+                                        <tr>
+                                            <td>session:123</td>
+                                            <td>{"user_id": "u123", "expires": "2023-12-31T23:59:59Z"}</td>
+                                            <td>Object</td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-primary me-1"><i class="fas fa-edit"></i></button>
+                                                <button class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>cache:user:profile:456</td>
+                                            <td>"{\"name\":\"Bob\",\"role\":\"admin\"}"</td>
+                                            <td>String</td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-primary me-1"><i class="fas fa-edit"></i></button>
+                                                <button class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Columns View -->
+                <div id="columns-view" style="display: none;">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span><i class="fas fa-table me-2"></i>Column Store Management</span>
+                            <button class="btn btn-sm btn-primary" id="add-column-btn">
+                                <i class="fas fa-plus me-1"></i> Add Column
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <label for="family-select" class="form-label">Column Family</label>
+                                    <select class="form-select" id="family-select">
+                                        <option value="">Select family</option>
+                                        <option value="users">Users</option>
+                                        <option value="analytics">Analytics</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="row-id-input" class="form-label">Row ID</label>
+                                    <input type="text" class="form-control" id="row-id-input" placeholder="Enter row ID">
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="column-search" class="form-label">Search</label>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="column-search" placeholder="Search columns...">
+                                        <button class="btn btn-outline-secondary" type="button">
+                                            <i class="fas fa-search"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Family</th>
+                                            <th>Row</th>
+                                            <th>Column</th>
+                                            <th>Value</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="columns-table-body">
+                                        <tr>
+                                            <td>users</td>
+                                            <td>user1</td>
+                                            <td>name</td>
+                                            <td>John Doe</td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-primary me-1"><i class="fas fa-edit"></i></button>
+                                                <button class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>users</td>
+                                            <td>user1</td>
+                                            <td>email</td>
+                                            <td>john@example.com</td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-primary me-1"><i class="fas fa-edit"></i></button>
+                                                <button class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Graph View -->
+                <div id="graph-view" style="display: none;">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span><i class="fas fa-project-diagram me-2"></i>Graph Store Management</span>
+                            <div>
+                                <button class="btn btn-sm btn-primary me-1" id="add-node-btn">
+                                    <i class="fas fa-plus me-1"></i> Add Node
+                                </button>
+                                <button class="btn btn-sm btn-success" id="add-edge-btn">
+                                    <i class="fas fa-link me-1"></i> Add Edge
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="graph-search" class="form-label">Search Graph</label>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="graph-search" placeholder="Search nodes or edges...">
+                                        <button class="btn btn-outline-secondary" type="button">
+                                            <i class="fas fa-search"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="graph-filter" class="form-label">Filter by Type</label>
+                                    <select class="form-select" id="graph-filter">
+                                        <option value="">All Types</option>
+                                        <option value="user">User</option>
+                                        <option value="product">Product</option>
+                                        <option value="order">Order</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Graph visualization would appear here in a real implementation. 
+                                The graph store allows you to model complex relationships between entities.
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h5>Nodes</h5>
+                                    <div class="list-group">
+                                        <a href="#" class="list-group-item list-group-item-action">
+                                            <div class="d-flex w-100 justify-content-between">
+                                                <h6 class="mb-1">User:123</h6>
+                                                <small>Created: 2023-01-15</small>
+                                            </div>
+                                            <p class="mb-1">{"name": "John Doe", "email": "john@example.com"}</p>
+                                            <small class="text-muted">Labels: user, active</small>
+                                        </a>
+                                        <a href="#" class="list-group-item list-group-item-action">
+                                            <div class="d-flex w-100 justify-content-between">
+                                                <h6 class="mb-1">Product:456</h6>
+                                                <small>Created: 2023-01-16</small>
+                                            </div>
+                                            <p class="mb-1">{"name": "Laptop", "price": 999.99}</p>
+                                            <small class="text-muted">Labels: product, electronics</small>
+                                        </a>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <h5>Edges</h5>
+                                    <div class="list-group">
+                                        <a href="#" class="list-group-item list-group-item-action">
+                                            <div class="d-flex w-100 justify-content-between">
+                                                <h6 class="mb-1">Purchased</h6>
+                                                <small>Type: purchase</small>
+                                            </div>
+                                            <p class="mb-1">User:123 → Product:456</p>
+                                            <small class="text-muted">Properties: {"date": "2023-01-17"}</small>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Cluster View -->
+                <div id="cluster-view" style="display: none;">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span><i class="fas fa-network-wired me-2"></i>Cluster Management</span>
+                            <button class="btn btn-sm btn-primary" id="add-node-btn">
+                                <i class="fas fa-plus me-1"></i> Add Node
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-4">
+                                <div class="col-md-3">
+                                    <div class="card text-center bg-light">
+                                        <div class="card-body">
+                                            <i class="fas fa-server fa-2x text-primary mb-2"></i>
+                                            <h5>Primary</h5>
+                                            <p class="text-muted">Node-1</p>
+                                            <span class="badge bg-success">Active</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card text-center bg-light">
+                                        <div class="card-body">
+                                            <i class="fas fa-server fa-2x text-primary mb-2"></i>
+                                            <h5>Replica</h5>
+                                            <p class="text-muted">Node-2</p>
+                                            <span class="badge bg-success">Active</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card text-center bg-light">
+                                        <div class="card-body">
+                                            <i class="fas fa-server fa-2x text-primary mb-2"></i>
+                                            <h5>Replica</h5>
+                                            <p class="text-muted">Node-3</p>
+                                            <span class="badge bg-success">Active</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card text-center bg-light">
+                                        <div class="card-body">
+                                            <i class="fas fa-server fa-2x text-primary mb-2"></i>
+                                            <h5>Backup</h5>
+                                            <p class="text-muted">Node-4</p>
+                                            <span class="badge bg-warning">Standby</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Node ID</th>
+                                            <th>Address</th>
+                                            <th>Port</th>
+                                            <th>Status</th>
+                                            <th>Last Seen</th>
+                                            <th>Role</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="cluster-table-body">
+                                        <tr>
+                                            <td>node-1</td>
+                                            <td>10.0.1.10</td>
+                                            <td>8080</td>
+                                            <td><span class="status-indicator status-active"></span> Active</td>
+                                            <td>Just now</td>
+                                            <td>Primary</td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-primary me-1"><i class="fas fa-eye"></i></button>
+                                                <button class="btn btn-sm btn-outline-warning me-1"><i class="fas fa-exchange-alt"></i></button>
+                                                <button class="btn btn-sm btn-outline-danger"><i class="fas fa-times"></i></button>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>node-2</td>
+                                            <td>10.0.1.11</td>
+                                            <td>8080</td>
+                                            <td><span class="status-indicator status-active"></span> Active</td>
+                                            <td>1 min ago</td>
+                                            <td>Replica</td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-primary me-1"><i class="fas fa-eye"></i></button>
+                                                <button class="btn btn-sm btn-outline-warning me-1"><i class="fas fa-exchange-alt"></i></button>
+                                                <button class="btn btn-sm btn-outline-danger"><i class="fas fa-times"></i></button>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>node-3</td>
+                                            <td>10.0.1.12</td>
+                                            <td>8080</td>
+                                            <td><span class="status-indicator status-active"></span> Active</td>
+                                            <td>2 mins ago</td>
+                                            <td>Replica</td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-primary me-1"><i class="fas fa-eye"></i></button>
+                                                <button class="btn btn-sm btn-outline-warning me-1"><i class="fas fa-exchange-alt"></i></button>
+                                                <button class="btn btn-sm btn-outline-danger"><i class="fas fa-times"></i></button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
