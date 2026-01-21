@@ -1,20 +1,30 @@
 ```
 # Dependencies
-go/pkg/
+node_modules/
+vendor/
 
-# Compiled and build artifacts
+# Build artifacts
+dist/
+build/
+target/
 *.o
 *.obj
 *.a
 *.so
-*.dylib
 *.dll
 *.exe
+*.out
+
+# Go specific
+*.mod
+*.sum
+go.work.sum
 
 # Logs and temp files
 *.log
 *.tmp
 *.swp
+*.swo
 
 # Environment
 .env
@@ -24,12 +34,39 @@ go/pkg/
 # Editors
 .vscode/
 .idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
 
 # Coverage
-.coverage
 coverage/
 htmlcov/
+.coverage
 
-# Docker
-.dockerenv
+# Python (if applicable)
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+.PyInstaller/
+.build/
+dist/
+*.spec
+
+# Node.js (if applicable)
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+node_modules/
+jspm_packages/
+*.tsbuildinfo
+.nyc_output
+coverage/
+.nyc_output/
+istanbul/
 ```

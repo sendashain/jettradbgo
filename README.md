@@ -10,6 +10,7 @@ A distributed multi-model database engine built in Go that supports document, ke
 - **Cloud-Native**: Container-friendly with horizontal scaling
 - **HTTP API**: RESTful interface for all operations
 - **Consistency Levels**: Configurable consistency settings
+- **Web Admin Interface**: Comprehensive web-based management dashboard
 
 ## Data Models Supported
 
@@ -147,6 +148,27 @@ spec:
         - name: CLUSTER_PORT
           value: "9090"
 ```
+
+## Web Administration Interface
+
+A complete web-based administration interface is available to manage the database engine. The interface provides:
+
+- Dashboard with system health and statistics
+- Document store management
+- Key-value store management  
+- Column store management
+- Graph store management
+- Cluster monitoring and management
+- Real-time performance metrics
+
+To run the web admin interface along with the database engine, use the docker-compose file in the `webapp` directory:
+
+```bash
+cd webapp
+docker-compose up -d
+```
+
+Then access the web admin at `http://localhost:3000` and the database API at `http://localhost:8080`.
 
 ## Architecture
 
